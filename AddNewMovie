@@ -1,0 +1,174 @@
+Imports System.Data
+Imports System.Data.SqlClient
+Public Class add_new_item
+
+
+    Private Sub btnsave_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnsave.Click
+       
+       'Add and Save the item to database
+       
+        Dim check As Integer
+        Dim conn As SqlConnection
+        Dim cmdmember As New SqlCommand
+        Dim cmdmember1 As New SqlCommand
+        Dim damember As New SqlDataAdapter
+        Dim dsmemeber As New DataSet
+        Dim dtmember As New DataTable
+
+        If txtitemid.Text = "" Or txttitle.Text = "" Or txtstatus.Text = "" Or txtcategory.Text = "" Or txtcountry.Text = "" Or txtcast.Text = "" Or txtdirector.Text = "" Or txtdate.Text = "" Or txtamount.Text = "" Or txtfid.Text = "" Then
+            MsgBox(" member data not completed", MsgBoxStyle.OkOnly)
+        Else
+            If MsgBox("Are you sure to save member data with Id : " & txtitemid.Text & " ?", MsgBoxStyle.OkCancel, "Input confirm") = MsgBoxResult.Cancel Then
+            Else
+                Try
+                    conn = New SqlConnection("Data Source=.\SQLEXPRESS;AttachDbFilename=C:\Users\Harsh\Documents\Visual Studio 2008\Projects\pvrvideorental\pvrvideorental\pvrvideorental\pvrvideorental\Database1.mdf;Integrated Security=True;User Instance=True")
+                    conn.Open()
+                    cmdmember = conn.CreateCommand
+                    cmdmember.CommandText = "SELECT * FROM items WHERE itemid='" & Trim(txtitemid.Text) & " ' "
+                    damember.SelectCommand = cmdmember
+                    damember.Fill(dsmemeber, "items")
+                    dtmember = dsmemeber.Tables("items")
+
+                    If (dtmember.Rows.Count > 0) Then
+                        MsgBox("Movie ID " & Trim(txtitemid.Text) & " already in database", MsgBoxStyle.OkOnly, "Message :")
+
+                    Else
+                        cmdmember1 = conn.CreateCommand()
+                        cmdmember1.CommandText = "Insert into items(itemid,title,status,category,country,cast,director,datepurchase,amount,fid) values ('" & Trim(txtitemid.Text) & "','" & Trim(txttitle.Text) & "','" & Trim(txtstatus.Text) & "','" & Trim(txtcategory.Text) & "','" & Trim(txtcountry.Text) & "','" & Trim(txtcast.Text) & "','" & Trim(txtdirector.Text) & "','" & Trim(txtdate.Text) & "','" & Trim(txtamount.Text) & "','" & Trim(txtfid.Text) & "')"
+                        check = cmdmember1.ExecuteReader.RecordsAffected()
+                        If check > 0 Then
+                            MsgBox("Movie  With Id " & Trim(txtitemid.Text) & " succesfully to added", MsgBoxStyle.OkOnly, "Message :")
+                        Else
+                            MsgBox("Movie With Id " & Trim(txtitemid.Text) & " Failure  to added", MsgBoxStyle.OkOnly, "Message :")
+                        End If
+
+                        conn.Close()
+                    End If
+                Catch ex As Exception
+                    MsgBox("Error: " & ex.Source & ": " & ex.Message, MsgBoxStyle.OkOnly, "Connection Error !!")
+                End Try
+            End If
+        End If
+    End Sub
+
+   
+
+    Private Sub add_new_item_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+        txtitemid.Focus()
+    End Sub
+
+    Private Sub txtitemid_KeyPress(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs)
+       
+       ' Number Validation 
+       
+        If (Microsoft.VisualBasic.Asc(e.KeyChar) < 48) _
+             Or (Microsoft.VisualBasic.Asc(e.KeyChar) > 57) Then
+            e.Handled = True
+        End If
+        If (Microsoft.VisualBasic.Asc(e.KeyChar) = 8) Then
+            e.Handled = False
+        End If
+    End Sub
+
+    Private Sub txttitle_KeyPress(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs)
+      
+      ' Character and Space validation 
+      
+        If (Microsoft.VisualBasic.Asc(e.KeyChar) < 65) _
+           Or (Microsoft.VisualBasic.Asc(e.KeyChar) > 90) _
+           And (Microsoft.VisualBasic.Asc(e.KeyChar) < 97) _
+           Or (Microsoft.VisualBasic.Asc(e.KeyChar) > 122) Then
+            'Allowed space
+            If (Microsoft.VisualBasic.Asc(e.KeyChar) <> 32) Then
+                e.Handled = True
+            End If
+        End If
+        ' Allowed backspace
+        If (Microsoft.VisualBasic.Asc(e.KeyChar) = 8) Then
+            e.Handled = False
+        End If
+    End Sub
+
+
+    Private Sub txtamount_KeyPress(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs)
+    
+    'Number validation for amount to be entered
+    
+        If (Microsoft.VisualBasic.Asc(e.KeyChar) < 48) _
+            Or (Microsoft.VisualBasic.Asc(e.KeyChar) > 57) Then
+            e.Handled = True
+        End If
+        If (Microsoft.VisualBasic.Asc(e.KeyChar) = 8) Then
+            e.Handled = False
+        End If
+    End Sub
+
+    Private Sub txtnoofdiscs_KeyPress(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs)
+       
+       ' Number validation 
+       
+        If (Microsoft.VisualBasic.Asc(e.KeyChar) < 48) _
+            Or (Microsoft.VisualBasic.Asc(e.KeyChar) > 57) Then
+            e.Handled = True
+        End If
+        If (Microsoft.VisualBasic.Asc(e.KeyChar) = 8) Then
+            e.Handled = False
+        End If
+    End Sub
+
+  
+
+    Private Sub txtcategory_KeyPress(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs)
+    
+    ' character validation for category
+    
+        If (Microsoft.VisualBasic.Asc(e.KeyChar) < 65) _
+          Or (Microsoft.VisualBasic.Asc(e.KeyChar) > 90) _
+          And (Microsoft.VisualBasic.Asc(e.KeyChar) < 97) _
+          Or (Microsoft.VisualBasic.Asc(e.KeyChar) > 122) Then
+            'Allowed space
+            If (Microsoft.VisualBasic.Asc(e.KeyChar) <> 32) Then
+                e.Handled = True
+            End If
+        End If
+        ' Allowed backspace
+        If (Microsoft.VisualBasic.Asc(e.KeyChar) = 8) Then
+            e.Handled = False
+        End If
+    End Sub
+
+
+    Private Sub txtcast_KeyPress(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs)
+        If (Microsoft.VisualBasic.Asc(e.KeyChar) < 65) _
+          Or (Microsoft.VisualBasic.Asc(e.KeyChar) > 90) _
+          And (Microsoft.VisualBasic.Asc(e.KeyChar) < 97) _
+          Or (Microsoft.VisualBasic.Asc(e.KeyChar) > 122) Then
+            'Allowed space
+            If (Microsoft.VisualBasic.Asc(e.KeyChar) <> 32) Then
+                e.Handled = True
+            End If
+        End If
+        ' Allowed backspace
+        If (Microsoft.VisualBasic.Asc(e.KeyChar) = 8) Then
+            e.Handled = False
+        End If
+    End Sub
+
+ 
+    Private Sub Button3_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btncancel.Click
+        txtitemid.Text = ""
+        txttitle.Text = ""
+        txtstatus.Text = ""
+        txtcategory.Text = ""
+        txtcountry.Text = ""
+        txtcast.Text = ""
+        txtdirector.Text = ""
+        txtdate.Text = ""
+        txtamount.Text = ""
+        txtfid.Text = ""
+    End Sub
+
+    Private Sub DateTimePicker1_ValueChanged(ByVal sender As System.Object, ByVal e As System.EventArgs)
+
+    End Sub
+End Class
