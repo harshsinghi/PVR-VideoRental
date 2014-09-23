@@ -1,0 +1,439 @@
+Imports System.Data.SqlClient
+Imports System.Globalization
+Public Class rentitems
+    Private Sub Form2_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+        'TODO: This line of code loads data into the 'ShutterDataSet.rentreturn' table. You can move, or remove it, as needed.
+        cmbitemid.Items.Clear()
+        Me.RentreturnTableAdapter.Fill(Me.ShutterDataSet.rentreturn)
+        'Me.RentreturnTableAdapter.Fill(Me.Database1DataSet4.rentreturn)
+
+        Dim startdate As Date = DateAndTime.Today
+        lbldtborrowed.Text = startdate
+
+        startdate = startdate.AddDays(2)
+        lblduedate.Text = startdate
+        Dim conn5 As New SqlConnection
+        Dim cmdref As New SqlCommand
+        Dim dtref As SqlDataReader
+        
+        ' Initialize the connection string
+        
+        conn5.ConnectionString = "Data Source=MCA51\SQLEXPRESS;Initial Catalog=shutter;Integrated Security=True"
+        conn5.Open()
+        txtrefno.Text = 1
+        cmdref.Connection = conn5
+        cmdref.CommandText = "select reftransno from rentreturn"
+        dtref = cmdref.ExecuteReader
+        While dtref.Read
+            txtrefno.Text = dtref(0).ToString + 1
+        End While
+        dtref.Close()
+        conn5.Close()
+    End Sub
+
+    Private Sub Button5_Click(ByVal sender As System.Object, ByVal e As System.EventArgs)
+        On Error GoTo Mali
+        
+        'Open calculator app
+        
+        Shell("calc.exe", vbNormalFocus)
+        Exit Sub
+Mali:
+        MsgBox("Calculator is not installed in your computer.", vbExclamation)
+    End Sub
+
+    Private Sub txtItemid_KeyPress(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs)
+        If (Microsoft.VisualBasic.Asc(e.KeyChar) < 48) _
+             Or (Microsoft.VisualBasic.Asc(e.KeyChar) > 57) Then
+            e.Handled = True
+        End If
+        If (Microsoft.VisualBasic.Asc(e.KeyChar) = 8) Then
+            e.Handled = False
+        End If
+    End Sub
+
+    Private Sub cmdNew_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles cmdNew.Click
+    
+        ' Clear all the textboxes in the current form
+        txtborrid.Text = ""
+        txtmovietitle.Text = ""
+        lblamount.Text = ""
+        lblfid.Text = ""
+        lbllastname.Text = ""
+        lblMembername.Text = ""
+        lblmiddlename.Text = ""
+        txtmovietitle.Text = ""
+        txtmovietitle.Text = ""
+        lblstatus.Text = ""
+    End Sub
+
+    Private Sub txtMemID_KeyPress(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs)
+     
+        ' Number validation code
+        
+        If (Microsoft.VisualBasic.Asc(e.KeyChar) < 48) _
+             Or (Microsoft.VisualBasic.Asc(e.KeyChar) > 57) Then
+            e.Handled = True
+        End If
+        If (Microsoft.VisualBasic.Asc(e.KeyChar) = 8) Then
+            e.Handled = False
+        End If
+    End Sub
+
+    Private Sub clear()
+        With Me
+            'txtMemID.Text = ""
+            lblMembername.Text = ""
+            txtmovietitle.Text = ""
+            lblstatus.Text = ""
+            txtmovietitle.Text = ""
+        End With
+    End Sub
+
+    Private Sub cmdrent_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles cmdrent.Click
+    
+    ' Rent items logic
+    
+        Dim check As Integer
+        Dim conn As SqlConnection
+        Dim conn7 As New SqlConnection
+        Dim cmdStudent As New SqlCommand
+        Dim cmdStudent1 As New SqlCommand
+        Dim daStudent As New SqlDataAdapter
+        Dim dsStudent As New DataSet
+        Dim dtStudent As New DataTable
+        Dim cmdstats As SqlCommand
+        Dim cmdupdt As SqlCommand
+        Dim conn8 As New SqlConnection
+        Dim cmdref1 As New SqlCommand
+        Dim dtref1 As SqlDataReader
+        
+        ' Initialize connection to SQL Server database
+        
+        conn7.ConnectionString = "Data Source=MCA51\SQLEXPRESS;Initial Catalog=shutter;Integrated Security=True"
+        conn8.ConnectionString = "Data Source=MCA51\SQLEXPRESS;Initial Catalog=shutter;Integrated Security=True"
+        If txtrefno.Text = "" Or lblstatus.Text = "" Or lblMembername.Text = "" Or txtmovietitle.Text = "" Or lblamount.Text = "" Then
+            MsgBox("Transaction Data is not completed", MsgBoxStyle.OkOnly)
+        ElseIf MsgBox("Are you sure you want to process the transaction with this ref ID : " & txtrefno.Text & " ?", MsgBoxStyle.OkCancel, "Input confirm") = MsgBoxResult.Cancel Then
+            ' do nothing
+        Else
+            Try
+                conn = GetConnect()
+                conn.Open()
+                cmdStudent = conn.CreateCommand
+                cmdStudent.CommandText = "SELECT * FROM rentreturn WHERE reftransno ='" & Trim(txtrefno.Text) & " ' "
+                daStudent.SelectCommand = cmdStudent
+                daStudent.Fill(dsStudent, "rentreturn")
+                dtStudent = dsStudent.Tables("rentreturn")
+
+                If (dtStudent.Rows.Count > 0) Then
+                    MsgBox("Transaction Id " & Trim(txtrefno.Text) & " already in database", MsgBoxStyle.OkOnly, "Message :")
+                End If
+                If Val(lblcopies.Text > 0) Then
+
+                    cmdStudent1 = conn.CreateCommand
+                    cmdStudent1.CommandText = "INSERT INTO rentreturn(reftransno, itemidno, membershipidno, title, fname, dateborr, duedate, totalamount,rentreturnstatus) VALUES('" & Trim(txtrefno.Text) & "','" & Trim(cmbitemid.Text) & "','" & Trim(txtborrid.Text) & "','" & Trim(txtmovietitle.Text) & "','" & Trim(lblMembername.Text) & "','" & Trim(lbldtborrowed.Text) & "','" & Trim(lblduedate.Text) & "','" & Trim(lblamount.Text) & "','" & Trim(lblstatus.Text) & "')"
+                    check = cmdStudent1.ExecuteReader.RecordsAffected()
+                    cmbitemid.Text = ""
+                Else
+                    MsgBox(" All copies are being rented for the particular movie", MsgBoxStyle.Information)
+                End If
+                If check > 0 And Val(lblcopies.Text) > 0 Then
+
+                    MsgBox("Transaction " & Trim(txtrefno.Text) & " succesfull", MsgBoxStyle.OkOnly, "Message :")
+                    lblmiddlename.Text = ""
+                    lbllastname.Text = ""
+                    cmbitemid.Text = ""
+                    txtborrid.Text = ""
+                    lblcopies.Text = Val(lblcopies.Text) - 1
+                    conn7.Open()
+                    cmdupdt = New SqlCommand("Update itemcopies set noofcopies = '" & lblcopies.Text & "' where itemidno = '" & Val(cmbitemid.SelectedItem) & "'", conn7)
+                    cmdupdt.ExecuteNonQuery()
+                    If Val(lblcopies.Text) < 1 Then
+                        cmdstats = New SqlCommand("Update items set status = 'unavailable' where itemid = '" & Val(cmbitemid.SelectedItem) & "'", conn7)
+                        cmdstats.ExecuteNonQuery()
+                    End If
+                    conn7.Close()
+                    txtmovietitle.Text = ""
+
+                    conn8.Open()
+                    cmdref1.Connection = conn8
+                    cmdref1.CommandText = "select reftransno from rentreturn"
+                    dtref1 = cmdref1.ExecuteReader
+                    While dtref1.Read
+                        txtrefno.Text = dtref1(0).ToString + 1
+                    End While
+                    dtref1.Close()
+                    Dim startdate As Date = DateAndTime.Today
+                    lbldtborrowed.Text = startdate
+
+                    startdate = startdate.AddDays(2)
+                    lblduedate.Text = startdate
+                    conn8.Close()
+                    cmbitemid.Items.Clear()
+                    lblMembername.Text = ""
+                    lblmiddlename.Text = ""
+                    lbllastname.Text = ""
+                    txtborrid.Text = ""
+                    lblcopies.Text = ""
+                Else
+                    MsgBox("transaction " & Trim(txtrefno.Text) & " Failure or no more copies of the movies left", MsgBoxStyle.OkOnly, "Message :")
+                End If
+                Refresh_Form()
+                conn.Close()
+                Me.Refresh()
+
+
+
+            Catch ex As Exception
+                MsgBox("Error: " & ex.Source & ": " & ex.Message, MsgBoxStyle.OkOnly, "Connection Error !!")
+            End Try
+        End If
+    End Sub
+
+    Private Sub Refresh_Form()
+    
+    ' Refresh the items in the current form
+    
+        Dim conn As SqlConnection
+        Dim cmdStudent As New SqlCommand
+        Dim daStudent As New SqlDataAdapter
+        Dim dsStudent As New DataSet
+        Dim dtStudent As New DataTable
+
+        'clear all textbox
+
+        lblstatus.Text = ""
+        lblMembername.Text = ""
+        txtmovietitle.Text = ""
+        lblamount.Text = ""
+        lblformat.Text = ""
+        cmbitemid.Items.Clear()
+        'this part to call data from database and show in datagrid
+        conn = GetConnect()
+        Try
+            cmdStudent = conn.CreateCommand
+            cmdStudent.CommandText = "SELECT * FROM rentreturn"
+            daStudent.SelectCommand = cmdStudent
+            daStudent.Fill(dsStudent, "rentreturn")
+            dgrentitems.DataSource = dsStudent
+            dgrentitems.DataMember = "rentreturn"
+            dgrentitems.ReadOnly = True
+        Catch ex As Exception
+            MsgBox("Error: " & ex.Source & ": " & ex.Message, MsgBoxStyle.OkOnly, "Connection Error !!")
+        End Try
+    End Sub
+
+    Private Sub txtborrid_KeyPress(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs) Handles txtborrid.KeyPress
+        If (Microsoft.VisualBasic.Asc(e.KeyChar) < 48) _
+           Or (Microsoft.VisualBasic.Asc(e.KeyChar) > 57) Then
+            e.Handled = True
+        End If
+        If (Microsoft.VisualBasic.Asc(e.KeyChar) = 8) Then
+            e.Handled = False
+        End If
+    End Sub
+
+    Private Sub txtborrid_TextChanged(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles txtborrid.TextChanged
+
+      ' Get the borrower ID to whom the movie was rented
+
+        Dim conn3 As New SqlConnection
+        Dim comm As New SqlCommand
+
+        Dim dr As SqlDataReader
+
+        conn3.ConnectionString = ("Data Source=MCA51\SQLEXPRESS;Initial Catalog=shutter;Integrated Security=True")
+        conn3.Open()
+        comm.Connection = conn3
+
+        comm.CommandText = " select * from membership where membershipid = '" & Val(txtborrid.Text) & "'"
+
+        dr = comm.ExecuteReader
+        If (dr.HasRows) Then
+            While dr.Read()
+                lblMembername.Text = ("" & dr(2))
+                lblmiddlename.Text = ("" & dr(3))
+                lbllastname.Text = ("" & dr(1))
+
+            End While
+
+            dr.Close()
+
+
+            Try
+                comm.ExecuteNonQuery()
+                comm.CommandText = "commit"
+            Catch ex As Exception
+                MsgBox("an exception has occured ", MsgBoxStyle.Exclamation, "Shutter Stock ")
+            End Try
+
+            conn3.Close()
+
+            dgrentitems.DataSource = ShutterDataSet
+            dgrentitems.DataMember = "rentreturn"
+
+            Dim con As New SqlConnection
+            Dim cmdOLE As New SqlCommand
+            Dim dsOLE As New DataSet
+            Dim da As New SqlDataAdapter
+            Dim dtOLe As New DataTable
+
+            con.ConnectionString = ("Data Source=MCA51\SQLEXPRESS;Initial Catalog=shutter;Integrated Security=True")
+
+            Try
+                cmdOLE = con.CreateCommand
+                cmdOLE.CommandText = "select * from rentreturn where membershipidno = '" & Trim(txtborrid.Text) & "'"
+                da.SelectCommand = cmdOLE
+                da.Fill(dsOLE, "rentreturn")
+                dgrentitems.DataSource = dsOLE
+                dgrentitems.DataMember = "rentreturn"
+                dgrentitems.ReadOnly = True
+            Catch ex As Exception
+                MsgBox("error : " & ex.Source & ": " & ex.Message, MsgBoxStyle.OkOnly, " connection error !!")
+            End Try
+        Else
+            'MsgBox("No record found")
+            clear1()
+            dgrentitems.DataSource = Nothing
+        End If
+    End Sub
+
+    Private Sub clear1()
+        lblMembername.Text = ""
+        lbllastname.Text = ""
+        lblmiddlename.Text = ""
+        txtborrid.Text = ""
+    End Sub
+    Private Sub clear2()
+        lblformat.Text = ""
+        cmbitemid.Items.Clear()
+        lblcopies.Text = ""
+    End Sub
+    Private Sub Button3_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button3.Click
+
+        Me.Close()
+        frmMain.Show()
+    End Sub
+    Private Sub cmbitemid_SelectedIndexChanged(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles cmbitemid.SelectedIndexChanged
+        
+        ' Get the unique ID of the selected movie from the combobox
+        
+        Dim conn12 As New SqlConnection
+        Dim comm3 As New SqlCommand
+        Dim dr10 As SqlDataReader
+        Dim conn13 As New SqlConnection
+        Dim comm13 As New SqlCommand
+        Dim dr13 As SqlDataReader
+        Dim conn15 As New SqlConnection
+        Dim comm16 As New SqlCommand
+        Dim dr15 As SqlDataReader
+        
+        ' Initialize connection to SQL database
+        
+        conn12.ConnectionString = ("Data Source=MCA51\SQLEXPRESS;Initial Catalog=shutter;Integrated Security=True")
+        conn13.ConnectionString = ("Data Source=MCA51\SQLEXPRESS;Initial Catalog=shutter;Integrated Security=True")
+        conn15.ConnectionString = ("Data Source=MCA51\SQLEXPRESS;Initial Catalog=shutter;Integrated Security=True")
+
+        conn13.Open()
+        comm13.Connection = conn13
+        comm13.CommandText = "select fid from items where itemid = '" & Trim(cmbitemid.SelectedItem) & "'"
+        dr13 = comm13.ExecuteReader
+
+        While dr13.Read
+            lblfid.Text = dr13(0)
+        End While
+        dr13.Close()
+        conn13.Close()
+
+        conn12.Open()
+        comm3.Connection = conn12
+        comm3.CommandText = "select * from format where fid = '" & Val(lblfid.Text) & "'"
+        dr10 = comm3.ExecuteReader
+        While dr10.Read
+            lblformat.Text = dr10(1)
+            lblamount.Text = dr10(3)
+        End While
+        dr10.Close()
+        conn12.Close()
+
+        conn15.Open()
+        comm16.Connection = conn15
+        comm16.CommandText = " select noofcopies from itemcopies where itemidno = '" & Trim(cmbitemid.SelectedItem) & "'"
+        dr15 = comm16.ExecuteReader
+        While dr15.Read
+            lblcopies.Text = dr15(0)
+        End While
+        dr15.Close()
+        conn15.Close()
+    End Sub
+
+    Private Sub Button1_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button1.Click
+        frmItemList.Show()
+    End Sub
+
+    Private Sub Button2_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button2.Click
+        frmMembership.Show()
+    End Sub
+    Private Sub txtmovietitle_TextChanged(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles txtmovietitle.TextChanged
+        Dim conn2 As New SqlConnection
+        Dim comm2 As New SqlCommand
+        Dim comm4 As New SqlCommand
+        Dim comm5 As New SqlCommand
+        Dim comm6 As New SqlCommand
+        Dim dr2 As SqlDataReader
+        Dim dr3 As SqlDataReader
+        Dim dr4 As SqlDataReader
+        'Dim dr6 As SqlDataReader
+
+        conn2.ConnectionString = ("Data Source=MCA51\SQLEXPRESS;Initial Catalog=shutter;Integrated Security=True")
+
+        conn2.Open()
+
+        comm2.Connection = conn2
+        comm2.CommandText = " select * from items where title = '" & Trim(txtmovietitle.Text) & "'"
+
+        dr2 = comm2.ExecuteReader
+        cmbitemid.Refresh()
+        While dr2.Read()
+            '  cmbitemid.Text = ("" & dr2(0))
+            cmbitemid.Items.Add("" & dr2(0))
+            lblstatus.Text = ("" & dr2(2))
+        End While
+        dr2.Close()
+
+        comm4.Connection = conn2
+        comm4.CommandText = "select * from items where itemid = '" & Trim(cmbitemid.Text) & "'"
+        dr4 = comm4.ExecuteReader
+        While dr4.Read
+            lblfid.Text = ("" & dr4(9))
+        End While
+        dr4.Close()
+
+        comm5.Connection = conn2
+        comm5.CommandText = "select * from format where fid = '" & Val(lblfid.Text) & "'"
+        dr3 = comm5.ExecuteReader
+        While dr3.Read
+            lblamount.Text = ("" & dr3(3))
+            lblformat.Text = ("" & dr3(1))
+        End While
+        dr3.Close()
+
+        Try
+            comm2.ExecuteNonQuery()
+            comm2.CommandText = "commit"
+
+            If txtmovietitle.Text = "" Then
+                lblstatus.Text = ""
+                cmbitemid.Text = ""
+                lblamount.Text = ""
+                lblformat.Text = ""
+
+            End If
+        Catch ex As Exception
+            MsgBox("an exception has occured ", MsgBoxStyle.Exclamation, "Shutter Stock ")
+        End Try
+        conn2.Close()
+    End Sub
+End Class
+
